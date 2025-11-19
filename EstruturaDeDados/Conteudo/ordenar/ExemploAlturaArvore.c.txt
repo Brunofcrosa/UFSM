@@ -1,0 +1,16 @@
+
+
+int altura(arv *raiz)
+{
+    if (raiz == NULL)
+       return -1;
+    else
+    {
+        int esq = altura(raiz->esq);
+        int dir = altura(raiz->dir);
+        if (esq < dir)
+           return dir+1;
+        else
+            return esq+1;
+        }
+    }

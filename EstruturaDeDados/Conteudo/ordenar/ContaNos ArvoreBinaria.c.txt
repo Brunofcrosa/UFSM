@@ -1,0 +1,7 @@
+int contaNos(struct arvore* r) {
+    if (r == NULL) {
+        return 0;
+    }
+    // Conta o nó atual + nós da subárvore esquerda + nós da subárvore direita
+    return 1 + contaNos(r->esq) + contaNos(r->dir);
+}

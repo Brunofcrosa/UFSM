@@ -1,0 +1,7 @@
+int somaNos(struct arvore* r) {
+    if (r == NULL) {
+        return 0;
+    }
+    // Soma o valor do nó atual + soma da subárvore esquerda + soma da subárvore direita
+    return r->valor + somaNos(r->esq) + somaNos(r->dir);
+}

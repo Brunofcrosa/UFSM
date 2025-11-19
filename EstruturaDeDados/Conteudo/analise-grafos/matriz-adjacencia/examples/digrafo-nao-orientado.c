@@ -1,7 +1,6 @@
 // Grafo Não-Orientado com Matriz de Adjacênci
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 
 #define NUM_VERTICES 6
 #define MAX_FILA NUM_VERTICES

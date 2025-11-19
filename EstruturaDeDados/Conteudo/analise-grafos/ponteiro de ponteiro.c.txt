@@ -1,0 +1,14 @@
+#include<stdio.h>
+
+int main(){
+	int x = 10;
+	int *y = &x;
+	
+	int **p = &y;
+	
+	printf("%d\t", *y);
+	printf("%d", **p);
+	
+	
+	// como guardar o endereço de px em um ponteiro??
+}

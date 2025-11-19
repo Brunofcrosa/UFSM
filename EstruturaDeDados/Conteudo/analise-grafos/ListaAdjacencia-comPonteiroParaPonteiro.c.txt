@@ -1,0 +1,95 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Definição do Nó da Lista de Adjacência
+// Este nó representa um vizinho na lista.
+struct No {
+    int destino;        // O vértice com quem se conecta
+    struct No* proximo; // Ponteiro para o próximo vizinho na lista
+};
+
+// Definição da Estrutura do Grafo
+struct Grafo {
+    int num_vertices;
+    struct No** listaAdj;      // "array de listas". É um ponteiro para um array de ponteiros (No*).
+};
+
+typedef struct No No;
+typedef struct Grafo Grafo;
+
+// Funções Auxiliares
+
+// Cria um novo nó de lista encadeada
+No* criarNo(int destino) {
+    No* novoNo = (No*) malloc(sizeof(No));
+    novoNo->destino = destino;
+    novoNo->proximo = NULL;
+    return novoNo;
+}
+
+// Cria o grafo inicializando o array de listas
+Grafo* criarGrafo(int vertices) {
+    Grafo* grafo = (Grafo*) malloc(sizeof(Grafo));
+    grafo->num_vertices = vertices;
+
+    // Aloca memória para o array de listas de adjacência
+    // Tamanho: número de vértices * tamanho de um ponteiro
+    grafo->listaAdj = (No**) malloc(vertices * sizeof(No*));
+
+    // Importante: Inicializar todas as listas como NULL (vazias)
+    int i;
+    for (i = 0; i < vertices; i++) {
+        grafo->listaAdj[i] = NULL;
+    }
+
+    return grafo;
+}
+
+// Adiciona uma aresta entre origem e destino (Não-Direcionado)
+void adicionarAresta(Grafo* grafo, int origem, int destino) {
+    // 1. Adiciona aresta da origem para o destino
+    No* novoNo = criarNo(destino);
+    novoNo->proximo = grafo->listaAdj[origem]; // O novo nó aponta para a antiga cabeça
+    grafo->listaAdj[origem] = novoNo;  // A cabeça passa a ser o novo nó
+
+    // 2. Como é não-direcionado, adicionamos também do destino para a origem
+    novoNo = criarNo(origem);
+    novoNo->proximo = grafo->listaAdj[destino];
+    grafo->listaAdj[destino] = novoNo;
+}
+
+// Função para imprimir o grafo
+void imprimirGrafo(Grafo* grafo) {
+    printf("\nLista de Adjacencia do Grafo:\n");
+    for (int v = 0; v < grafo->num_vertices; v++) {
+        No* temp = grafo->listaAdj[v];
+        printf("\n Vertice %d: ", v);
+        while (temp) {
+            printf("-> %d ", temp->destino);
+            temp = temp->proximo;
+        }
+        printf("-> NULL");
+    }
+    printf("\n");
+}
+
+// --- Função Principal ---
+int main() {
+    // Criamos um grafo com 5 vértices (0 a 4)
+    int total_vertices = 5;
+    Grafo* grafo = criarGrafo(total_vertices);
+
+    // Adicionando conexões (Arestas)
+    adicionarAresta(grafo, 0, 1);
+    adicionarAresta(grafo, 0, 4);
+    adicionarAresta(grafo, 1, 2);
+    adicionarAresta(grafo, 1, 3);
+    adicionarAresta(grafo, 1, 4);
+    adicionarAresta(grafo, 2, 3);
+    adicionarAresta(grafo, 3, 4);
+
+    // Mostrando o resultado
+    imprimirGrafo(grafo);
+
+    return 0;
+}

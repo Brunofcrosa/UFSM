@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define VERTICES 5
+
+// Estrutura do Nó
+typedef struct No {
+    int idVizinho;
+    struct No* proximo;
+} No;
+
+// Função para criar aresta. 
+// Recebe o array de listas (o grafo) como parâmetro.
+void criarAresta(No* grafo[], int origem, int destino) {
+    No* novo = (No*) malloc(sizeof(No));
+    novo->idVizinho = destino;
+    
+    // Insere no início da lista da 'origem'
+    novo->proximo = grafo[origem]; 
+    grafo[origem] = novo; 
+}
+
+// Função para imprimir
+void imprimirGrafo(No* grafo[], int numVertices) {
+    for (int i = 0; i < numVertices; i++) {
+        printf("Vertice %d: ", i);
+        No* atual = grafo[i];
+        while (atual != NULL) {
+            printf("%d -> ", atual->idVizinho);
+            atual = atual->proximo;
+        }
+        printf("NULL\n");
+    }
+}
+
+int main() {
+    // O grafo é declarado aqui na main§
+    // É um array onde cada posição guarda um ponteiro para No
+    No* grafo[VERTICES]; 
+
+    // 1. Inicialização obrigatória. Boa prática de programação. ;)
+    for (int i = 0; i < VERTICES; i++) {
+        grafo[i] = NULL;
+    }
+
+    // 2. Criando conexões (passamos 'grafo' como argumento)
+    // Exemplo: Grafo Direcionado 0->1, 0->4, 1->2
+    criarAresta(grafo, 0, 1);
+    criarAresta(grafo, 0, 4);
+    criarAresta(grafo, 1, 2);
+    criarAresta(grafo, 3, 2);
+    criarAresta(grafo, 3, 4);
+
+    // 3. Imprimindo
+    imprimirGrafo(grafo, VERTICES);
+
+    return 0;
+}

@@ -1,0 +1,28 @@
+#include<stdio.h>
+
+void geraColunas(int l, int c){
+	if (c == 0){
+		return;
+	}
+	else{
+		printf("\t<td> linha %d, coluna %d </td>\n",l, c);
+		geraColunas(l, c-1);
+	}
+}
+
+void geraTabela(int linhas, int colunas){
+	if(linhas == 0){
+		return;
+	}
+	else{
+		printf("<tr>\n");
+		geraColunas(linhas, colunas);
+		printf("</tr>\n");
+		geraTabela(linhas-1, colunas);
+	}
+}
+
+int main(){
+	int colunas = 3;
+	geraTabela(2, 3);
+}

@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct lista {
+    int info;
+    struct lista *prox;
+};
+
+typedef struct lista Lista;
+
+// FUN??O PARA INSERIR NO FINAL
+Lista *insere(Lista *l, int i) {
+    Lista *novo;
+    novo = (Lista *) malloc (sizeof(Lista));
+    novo->info = i;
+    if (l == NULL){
+		novo->prox = novo;
+		return novo;
+	}
+	else{
+		if(l->prox == l){
+			l->prox = novo;
+			novo->prox = l;			
+		}
+		else{
+			Lista *p = l->prox;
+			while(p->prox != l){
+				p = p->prox;
+			}
+			p->prox = novo;
+			novo->prox = l;
+		}
+	}
+	return l;
+}
+
+//FUN??O PARA IMPRIMIR ELEMENTOS DA LISTA
+void imprime (Lista *l)
+{
+    Lista *p = l;
+	printf("%d \n", l->info);
+	for(p=l->prox; p!=l; p = p->prox){
+		printf("%d \n", p->info);	
+	}
+}
+
+//FUN??O PARA RETIRAR UM VALOR DA LISTA
+Lista *retira(Lista *l, int v) {
+    Lista *ant = NULL; 
+    Lista *p = l; 
+     
+    while (p != NULL && p->info != v) { 
+        ant = p;
+        p = p->prox;
+    }
+      
+    if (p == NULL){ 
+        return l;
+    }     
+      
+    if (ant == NULL) { 
+        l = p->prox;
+    }
+    else {
+        ant->prox = p->prox; 
+    }
+      
+    free(p); 
+    return l; 
+}
+
+int main() {
+    Lista *l;
+    l = NULL;
+    l = insere(l, 43);
+    l = insere(l, 75);
+    l = insere(l, 30);
+    l = insere(l, 12);
+    imprime(l);
+    return 0;
+}
+
+

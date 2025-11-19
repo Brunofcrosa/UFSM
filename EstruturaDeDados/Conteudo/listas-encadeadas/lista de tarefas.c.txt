@@ -1,0 +1,79 @@
+#include<stdio.h>
+#include<string.h>
+
+struct tarefas{
+	int id;
+	char desc[100];
+	char prioridade[6];
+	struct tarefas *prox;
+};
+
+typedef struct tarefas tf;
+
+tf *insere(tf *l){
+	tf *p;
+	p = l;
+	tf *novaTarefa = (tf *) malloc(sizeof(tf));
+	printf("Id: ");
+	scanf("%d", &novaTarefa->id);
+	printf("Descricao: ");
+	fflush(stdin);
+	gets(novaTarefa->desc);
+	printf("Prioridade: ");
+	fflush(stdin);
+	gets(novaTarefa->prioridade);
+	
+	if(p == NULL){
+		return novaTarefa;
+	}
+	else{
+		if(strcmp(novaTarefa->prioridade, "baixa") == 0){ // insere na última posição
+			while (p->prox != NULL){
+				p = p->prox;
+			}
+			p->prox = novaTarefa;
+		}
+		else if(strcmp(novaTarefa->prioridade, "alta") == 0){ // insere entre a última 'alta' e 'media'
+			while(strcmp(p->prox->prioridade, "alta") == 0){
+				p = p->prox;
+			}
+			novaTarefa->prox = p->prox;
+			p->prox = novaTarefa;	
+		}
+		else if(strcmp(novaTarefa->prioridade, "media") == 0){ // insere entre a última 'media' e 'baixa'
+			printf("aqui\n");
+			puts(p->prioridade);
+			
+			tf *ant = NULL;
+			while(strcmp(p->prioridade, "baixa") != 0 || p->prox != NULL){
+				ant = p;
+				p = p->prox;
+			}
+			
+			
+			novaTarefa->prox = p;
+			ant->prox = novaTarefa;
+		}
+		return l;
+	}
+	
+}
+
+void imprime(tf *l){
+	printf("Lista de tarefas: \n");
+	while(l != NULL){
+		printf("\n%d\n", l->id);
+		puts(l->desc);
+		puts(l->prioridade);
+	}
+}
+
+int main(){
+	tf *L = NULL;
+	L = insere(L);
+	L = insere(L);
+	L = insere(L);
+	L = insere(L);
+	imprime(L);
+	return 0;
+}

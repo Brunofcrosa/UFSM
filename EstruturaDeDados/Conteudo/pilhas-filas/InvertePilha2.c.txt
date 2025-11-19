@@ -1,0 +1,77 @@
+#include<stdio.h>
+
+struct pilha {
+    int info;
+    struct pilha *prox;
+};
+
+typedef struct pilha pilha;
+
+pilha *insereElementos(pilha *l){
+    int i = 1;
+    while(i <= 3){
+        pilha *novo = (pilha *) malloc(sizeof(pilha));
+        novo->info = i * 10;
+        novo->prox = NULL;
+        if(l == NULL){
+            l = novo;
+        }
+        else{
+            pilha *p = l;
+            while(p->prox != NULL){
+                p = p->prox;
+            }
+            p->prox = novo;
+        }
+        i++;
+    }
+    return l;
+}
+
+void imprime(pilha *l){
+    for(; l != NULL; l=l->prox){
+        printf("%d\t", l->info);
+    }
+}
+
+pilha *inverteElementos(pilha *l, pilha *l2){
+    pilha *p, *ant;
+    while (l->prox != NULL){
+        p = l;
+        while(p->prox != NULL){
+            ant = p;
+            p = p->prox;
+        }
+        ant->prox = NULL;
+        if(l2 == NULL){
+            l2 = p;
+        }
+        else{
+            pilha *p2 = l2;
+            while(p2->prox != NULL){
+                p2 = p2->prox;
+            }
+            p2->prox = p;
+        }
+    }
+    pilha *p2 = l2;
+    while(p2->prox != NULL){
+        p2 = p2->prox;
+    }
+    p2->prox = l;
+    
+
+    return l2;
+}
+
+int main(){
+    pilha *L = NULL;
+    L = insereElementos(L);
+    printf("Lista 1: ");
+    imprime(L);
+    pilha *L2 = NULL;
+    L2 = inverteElementos(L, L2);
+    printf("\nLista 2: ");
+    imprime(L2);
+    return 0;
+}

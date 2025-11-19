@@ -1,0 +1,31 @@
+/*
+Escrever um programa com uma função que leia N números reais, 
+armazene-os em um vetor e imprima-os na ordem inversa
+*/
+
+void exercicio1(float *v, int n){
+	int i;
+	for(i=0; i<3; i++){
+		scanf("%.2f", v+i);
+	}
+	
+	for(i=2; i>=0; i--){
+		printf("%f\n", *(v+i));  
+		//*(v+2)
+		//*(v+1)
+		//*(v+0)
+	}
+}
+
+int main(){
+	int n;
+	scanf("%d", &n);
+	
+	float *vetor;
+	vetor = (float *) malloc(sizeof(float) * n);  // float vetor[n]
+	
+	exercicio1(vetor, n);
+	free(vetor);
+	
+	return 0;
+}

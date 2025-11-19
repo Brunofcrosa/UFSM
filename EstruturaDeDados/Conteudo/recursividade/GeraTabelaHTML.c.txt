@@ -1,0 +1,20 @@
+#include<stdio.h>
+
+void geraTabela(int l, int c){
+	int i, j;
+	for(i=0; i<l; i++){
+		printf("<tr>\n");
+		
+		for(j=0; j<c; j++){
+			printf("\t<td> linha %d, coluna %d </td> \n", i, j);
+		}
+		printf("</tr>\n");
+	}
+}
+
+
+int main(){
+	geraTabela(2, 3);
+	
+	return 0;
+}

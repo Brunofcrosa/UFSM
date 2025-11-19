@@ -1,0 +1,41 @@
+#include<stdio.h>
+/*
+Ler uma matriz A de ordem 3 (3x3) e construir uma matriz B de mesma dimensão, 
+onde cada elemento de B deve ser o dobro de cada elemento correspondente da matriz A, 
+com exceção para os valores situados na diagonal principal os quais devem ser 
+o triplo de cada elemento correspondente a A. Apresentar a matriz B.
+
+*/
+
+int main(){
+	int *a, *b, n = 9;
+	// aloca 9 espaço suficiente para guardar 9 inteiros na matriz 'a' e na matriz 'b'
+	a = (int *) malloc (sizeof(int) * n); 
+	b = (int *) malloc (sizeof(int) * n);
+	
+	int i;
+	printf("Digite %d valores: \n",  n);
+	for(i=0; i<n; i++){
+		scanf("%d", a+i); // preenche a matriz 'a' 
+	}
+
+	*b = (*a)*3; // equivale a posição [0][0] das matrizes. Essa posição é o primeiro elemento da diagonal principal. Multiplica o conteúdo de 'a' por 3 e guarda em 'b'. 
+	for(i=1; i<n; i++){
+		if(i%4 != 0){ // verifica se a posição que está sendo manipulada NÃO é da diagonal princial. Esse if é válido para matriz 3x3
+			*(b+i) = (*(a+i))*2; // acessa a posição a+i e multiplica seu conteúdo por 2		
+		}
+		else{ // entra aqui se a posição manipulada faz parte da diagonal principal.
+			*(b+i) = (*(a+i))*3;  // acessa a posição a+i e multiplica seu conteúdo por 3
+		}
+	}
+	
+	for(i=0; i<n; i++){
+		if(i % 3 == 0){
+			printf("\n");
+		}
+		printf("%d \t", *(b+i));
+	}
+	free(a);
+	free(b);
+	return 0;
+}

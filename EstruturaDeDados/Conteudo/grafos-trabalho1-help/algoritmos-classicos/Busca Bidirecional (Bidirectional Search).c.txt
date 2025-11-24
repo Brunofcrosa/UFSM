@@ -1,0 +1,185 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define VERTICES 8
+#define INF INT_MAX
+
+// --- ESTRUTURA BÁSICA ---
+typedef struct No {
+    int verticeDestino;     
+    struct No* proximo;     
+} No;
+
+// --- FILAS E CONTROLE ---
+// Usaremos dois conjuntos de controle para as buscas (forward e backward)
+int fila_fwd[VERTICES], fila_bwd[VERTICES];
+int dist_fwd[VERTICES], dist_bwd[VERTICES];
+int pai_fwd[VERTICES], pai_bwd[VERTICES]; // Para reconstruir o caminho
+
+int front_fwd = 0, rear_fwd = -1;
+int front_bwd = 0, rear_bwd = -1;
+
+// ----------------------------------------------------
+// 1. CRIAR ARESTA (Nao-Direcionada para simplificar a busca reversa)
+// ----------------------------------------------------
+void criarAresta(No* grafo[], int u, int v) {
+    // Adiciona u -> v
+    No* novo_u = (No*) malloc(sizeof(No));
+    novo_u->verticeDestino = v;
+    novo_u->proximo = grafo[u]; 
+    grafo[u] = novo_u; 
+    
+    // Adiciona v -> u
+    No* novo_v = (No*) malloc(sizeof(No));
+    novo_v->verticeDestino = u;
+    novo_v->proximo = grafo[v];
+    grafo[v] = novo_v; 
+}
+
+// ----------------------------------------------------
+// 2. FUNÇÕES AUXILIARES DE FILA
+// ----------------------------------------------------
+void enqueue(int* fila, int* rear, int u) {
+    if (*rear < VERTICES - 1) {
+        fila[++(*rear)] = u;
+    }
+}
+int dequeue(int* fila, int* front) {
+    if (*front <= *rear) {
+        return fila[(*front)++];
+    }
+    return -1;
+}
+int filaVazia(int front, int rear) {
+    return front > rear;
+}
+
+// ----------------------------------------------------
+// 3. ENCONTRAR O PONTO DE ENCONTRO
+// ----------------------------------------------------
+int verificarEncontro(int dist_fwd[], int dist_bwd[]) {
+    int ponto_encontro = -1;
+    // O ponto de encontro é o nó que foi visitado por ambas as buscas
+    for (int i = 0; i < VERTICES; i++) {
+        if (dist_fwd[i] != INF && dist_bwd[i] != INF) {
+            // Este é o primeiro nó que ambas as buscas alcançaram
+            return i; 
+        }
+    }
+    return -1;
+}
+
+// ----------------------------------------------------
+// 4. BUSCA BIDIRECIONAL
+// ----------------------------------------------------
+int buscaBidirecional(No* grafo[], int inicio, int destino) {
+    
+    // Inicializa distâncias e pais para ambas as buscas
+    for (int i = 0; i < VERTICES; i++) {
+        dist_fwd[i] = dist_bwd[i] = INF;
+        pai_fwd[i] = pai_bwd[i] = -1;
+    }
+
+    // Inicializa a busca forward
+    dist_fwd[inicio] = 0;
+    enqueue(fila_fwd, &rear_fwd, inicio);
+
+    // Inicializa a busca backward
+    dist_bwd[destino] = 0;
+    enqueue(fila_bwd, &rear_bwd, destino);
+
+    int ponto_encontro = -1;
+    
+    while (!filaVazia(front_fwd, rear_fwd) && !filaVazia(front_bwd, rear_bwd)) {
+        
+        // Passo 1: Expande a busca forward
+        int u = dequeue(fila_fwd, &front_fwd);
+        No* adj = grafo[u];
+        while (adj != NULL) {
+            int v = adj->verticeDestino;
+            if (dist_fwd[v] == INF) {
+                dist_fwd[v] = dist_fwd[u] + 1;
+                pai_fwd[v] = u;
+                enqueue(fila_fwd, &rear_fwd, v);
+            }
+            adj = adj->proximo;
+        }
+
+        // Verifica se houve encontro após a expansão forward
+        ponto_encontro = verificarEncontro(dist_fwd, dist_bwd);
+        if (ponto_encontro != -1) break;
+
+
+        // Passo 2: Expande a busca backward
+        u = dequeue(fila_bwd, &front_bwd);
+        adj = grafo[u];
+        while (adj != NULL) {
+            int v = adj->verticeDestino;
+            if (dist_bwd[v] == INF) {
+                dist_bwd[v] = dist_bwd[u] + 1;
+                pai_bwd[v] = u;
+                enqueue(fila_bwd, &rear_bwd, v);
+            }
+            adj = adj->proximo;
+        }
+
+        // Verifica se houve encontro após a expansão backward
+        ponto_encontro = verificarEncontro(dist_fwd, dist_bwd);
+        if (ponto_encontro != -1) break;
+    }
+
+    if (ponto_encontro != -1) {
+        // O caminho total é a soma das distâncias até o ponto de encontro.
+        return dist_fwd[ponto_encontro] + dist_bwd[ponto_encontro];
+    }
+    return -1; // Caminho não encontrado
+}
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO)
+// ----------------------------------------------------
+void desalocarGrafo(No* grafo[], int numVertices) {
+    for (int i = 0; i < numVertices; i++) {
+        No* atual = grafo[i];
+        while (atual != NULL) {
+            No* temp = atual;
+            atual = atual->proximo;
+            free(temp); 
+        }
+    }
+}
+
+int main() {
+    No* grafo[VERTICES] = {NULL}; 
+
+    // Criação do grafo (Caminho de 0 para 7)
+    criarAresta(grafo, 0, 1);
+    criarAresta(grafo, 1, 2);
+    criarAresta(grafo, 2, 3);
+    criarAresta(grafo, 3, 4);
+    criarAresta(grafo, 4, 5);
+    criarAresta(grafo, 5, 6);
+    criarAresta(grafo, 6, 7);
+    
+    // Conexões laterais
+    criarAresta(grafo, 0, 4);
+    criarAresta(grafo, 3, 7);
+
+
+    int inicio = 0;
+    int destino = 7;
+    
+    printf("--- Busca Bidirecional (Otimizacao de Caminho) ---\n");
+    int distancia = buscaBidirecional(grafo, inicio, destino);
+
+    if (distancia != -1) {
+        printf("Menor caminho de %d para %d encontrado. Distancia: %d\n", inicio, destino, distancia);
+    } else {
+        printf("Caminho de %d para %d nao encontrado.\n", inicio, destino);
+    }
+    printf("--------------------------------------------------\n");
+
+    desalocarGrafo(grafo, VERTICES);
+    return 0;
+}

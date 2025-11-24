@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define N 4 // Número de Cidades (Vértices)
+#define INF INT_MAX
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+// O array DP armazena os resultados dos subproblemas.
+// dp[mascara][i] = custo mínimo para visitar os nós da 'mascara' e terminar em 'i'.
+// A máscara é um inteiro que representa o conjunto de nós visitados (bitmask).
+int dp[1 << N][N]; 
+
+// Matriz de custo do grafo (Matriz de Adjacência)
+int custo[N][N] = {
+    //  0   1   2   3
+    /*0*/ {0, 10, 15, 20},
+    /*1*/ {5, 0, 9, 10},
+    /*2*/ {6, 13, 0, 12},
+    /*3*/ {8, 8, 9, 0}
+};
+
+// ----------------------------------------------------
+// 1. ALGORITMO HELD-KARP (Função DP Recursiva)
+// ----------------------------------------------------
+// Máscara: Conjunto de cidades já visitadas.
+// Último: Cidade em que a rota terminou.
+int tsp_dp(int mascara, int ultimo) {
+    
+    // CASO BASE: Se todas as cidades foram visitadas.
+    if (mascara == ((1 << N) - 1)) {
+        // Retorna o custo para voltar à cidade inicial (0).
+        return custo[ultimo][0]; 
+    }
+
+    // Se o valor já foi calculado, retorna.
+    if (dp[mascara][ultimo] != INF) {
+        return dp[mascara][ultimo];
+    }
+
+    int custo_min = INF;
+
+    // Tenta ir para todas as cidades 'proximo' que AINDA não foram visitadas.
+    for (int proximo = 0; proximo < N; proximo++) {
+        // Verifica se 'proximo' não está na máscara (se o bit não está setado)
+        if (!(mascara & (1 << proximo))) {
+            
+            // Calcula o custo do caminho: 
+            // Custo de ir de 'ultimo' para 'proximo' 
+            // + (recursivamente) o menor custo do subproblema restante.
+            int novo_custo = custo[ultimo][proximo] + tsp_dp(mascara | (1 << proximo), proximo);
+            
+            custo_min = MIN(custo_min, novo_custo);
+        }
+    }
+
+    // Armazena e retorna o resultado
+    return dp[mascara][ultimo] = custo_min;
+}
+
+// ----------------------------------------------------
+// 2. MAIN
+// ----------------------------------------------------
+int main() {
+    // Inicializa a tabela DP com INF
+    for (int i = 0; i < (1 << N); i++) {
+        for (int j = 0; j < N; j++) {
+            dp[i][j] = INF;
+        }
+    }
+
+    // O problema começa na cidade 0 (máscara inicial só com o bit 0 setado).
+    int resultado = tsp_dp(1 << 0, 0);
+
+    printf("--- Algoritmo de Held-Karp (TSP - Programacao Dinamica) ---\n");
+    printf("Numero de cidades: %d\n", N);
+    printf("Menor custo do ciclo hamiltoniano (TSP): %d\n", resultado);
+    printf("----------------------------------------------------------\n");
+
+    return 0;
+}

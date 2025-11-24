@@ -1,0 +1,167 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define VERTICES 6
+#define MAX(a, b) ((a) > (b) ? (a) : (b)) // Macro para máximo
+#define MIN(a, b) ((a) < (b) ? (a) : (b)) // Macro para mínimo
+
+// --- ESTRUTURA BÁSICA ---
+typedef struct No {
+    int verticeDestino;     
+    struct No* proximo;     
+} No;
+
+// Variáveis Globais de Controle para o DFS/Tempo
+int tempo;
+int disc[VERTICES]; // Tempo de descoberta
+int low[VERTICES];  // Menor tempo de retorno (Low Link)
+int pai[VERTICES];  // Vértice pai na árvore DFS
+int ap[VERTICES];   // Array para marcar se é Ponto de Articulação (1=Sim)
+
+// Criação de Aresta (Não-Direcionada)
+void criarAresta(No* grafo[], int u, int v) {
+    // Adiciona u -> v
+    No* novo_u = (No*) malloc(sizeof(No));
+    novo_u->verticeDestino = v;
+    novo_u->proximo = grafo[u]; 
+    grafo[u] = novo_u; 
+    
+    // Adiciona v -> u (para ser não-direcionado)
+    No* novo_v = (No*) malloc(sizeof(No));
+    novo_v->verticeDestino = u;
+    novo_v->proximo = grafo[v];
+    grafo[v] = novo_v; 
+}
+
+
+// ----------------------------------------------------
+// 1. FUNÇÃO DFS PRINCIPAL PARA PONTOS DE ARTICULAÇÃO
+// ----------------------------------------------------
+void DFS_PontoArticulacao(No* grafo[], int u) {
+    
+    // Contador de filhos do nó U na árvore DFS
+    int filhos = 0; 
+    
+    // Inicializa o tempo de descoberta e o menor tempo de retorno
+    disc[u] = low[u] = ++tempo;
+
+    // Itera sobre todos os vizinhos (v) de U
+    No* adjacente = grafo[u];
+    while (adjacente != NULL) {
+        int v = adjacente->verticeDestino;
+
+        // Caso 1: V é o pai de U (ignora, a menos que seja para arestas paralelas)
+        if (v == pai[u]) {
+            adjacente = adjacente->proximo;
+            continue;
+        }
+
+        // Caso 2: V já foi visitado (aresta de retorno - back edge)
+        if (disc[v] > 0) {
+            // V é um ancestral. Atualiza o 'low' de U com o 'disc' de V.
+            low[u] = MIN(low[u], disc[v]);
+        }
+        
+        // Caso 3: V não foi visitado (aresta de árvore)
+        else {
+            filhos++;
+            pai[v] = u;
+            DFS_PontoArticulacao(grafo, v);
+
+            // Após o retorno da chamada recursiva, atualiza o low de U
+            low[u] = MIN(low[u], low[v]);
+
+            // Teste de Ponto de Articulação
+
+            // Condição A: U é a RAIZ da árvore DFS e tem dois ou mais filhos
+            if (pai[u] == -1 && filhos > 1) {
+                ap[u] = 1;
+            }
+
+            // Condição B: U NÃO é a raiz E o menor tempo de retorno de V 
+            // é maior ou igual ao tempo de descoberta de U.
+            // Isso significa que V e seus descendentes não têm um caminho de volta
+            // que passe antes de U. U é o ponto de corte.
+            if (pai[u] != -1 && low[v] >= disc[u]) {
+                ap[u] = 1;
+            }
+        }
+        
+        adjacente = adjacente->proximo;
+    }
+}
+
+
+// ----------------------------------------------------
+// 2. WRAPPER PARA INICIAR O ALGORITMO
+// ----------------------------------------------------
+void encontrarPontosArticulacao(No* grafo[], int numVertices) {
+    // Inicializa as variáveis de controle
+    tempo = 0;
+    for (int i = 0; i < numVertices; i++) {
+        disc[i] = 0; // 0 indica não visitado
+        low[i] = 0;
+        pai[i] = -1;
+        ap[i] = 0;
+    }
+
+    // Inicia o DFS a partir de todos os vértices não visitados (para grafos desconexos)
+    for (int i = 0; i < numVertices; i++) {
+        if (disc[i] == 0) {
+            DFS_PontoArticulacao(grafo, i);
+        }
+    }
+
+    // Impressão dos resultados
+    printf("\n--- Pontos de Articulacao Encontrados ---\n");
+    int encontrado = 0;
+    for (int i = 0; i < numVertices; i++) {
+        if (ap[i] == 1) {
+            printf("Vertice %d e um Ponto de Articulacao.\n", i);
+            encontrado = 1;
+        }
+    }
+    if (!encontrado) {
+        printf("Nenhum Ponto de Articulacao encontrado.\n");
+    }
+    printf("----------------------------------------\n");
+}
+
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO)
+// ----------------------------------------------------
+void desalocarGrafo(No* grafo[], int numVertices) {
+    for (int i = 0; i < numVertices; i++) {
+        No* atual = grafo[i];
+        while (atual != NULL) {
+            No* temp = atual;
+            atual = atual->proximo;
+            free(temp); 
+        }
+    }
+}
+
+int main() {
+    No* grafo[VERTICES] = {NULL}; 
+
+    // Exemplo de grafo com Pontos de Articulação (Vertice 1 e 3)
+    // 0--1--2
+    //    |
+    //    3--4--5
+    
+    criarAresta(grafo, 0, 1);
+    criarAresta(grafo, 1, 2);
+    criarAresta(grafo, 1, 3);
+    criarAresta(grafo, 3, 4);
+    criarAresta(grafo, 4, 5);
+    
+    // Executa o algoritmo
+    encontrarPontosArticulacao(grafo, VERTICES);
+
+    // Limpeza
+    desalocarGrafo(grafo, VERTICES);
+
+    return 0;
+}

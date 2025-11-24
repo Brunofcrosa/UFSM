@@ -1,0 +1,107 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define VERTICES 5
+#define INF INT_MAX
+
+// --- 1. ESTRUTURA COM PESO E HEURÍSTICA ---
+typedef struct No_AStar {
+    int verticeDestino;
+    int peso; // g(n)
+    struct No_AStar* proximo;
+} No_AStar;
+
+// Estrutura para manter os valores de custo e heurística do nó
+typedef struct NodeData {
+    int g; // Custo do início até este nó (Distancia real)
+    int h; // Custo estimado até o destino (Heurística)
+    int f; // g + h
+    int id; // ID do vertice
+} NodeData;
+
+// --- 2. FUNÇÃO HEURÍSTICA (h(n)) ---
+// Esta é uma função de exemplo. Na prática, seria a distância Euclideana/Manhattan.
+// Aqui, apenas usamos uma estimativa simples baseada no ID do nó.
+int calcularHeuristica(int vertice, int destino) {
+    // Exemplo de Heuristica simples:
+    return abs(destino - vertice) * 2; 
+}
+
+// ----------------------------------------------------
+// 3. AUXILIAR: ENCONTRAR O PRÓXIMO VÉRTICE (SIMULAÇÃO DA FILA DE PRIORIDADE)
+// ----------------------------------------------------
+// Encontra o vértice não visitado com o menor custo F (g + h).
+int encontrarMenorF(NodeData dados[], int visitado[], int numVertices) {
+    int min_f = INF;
+    int indiceMenor = -1;
+
+    for (int v = 0; v < numVertices; v++) {
+        // Se V não foi visitado E tem um custo F menor
+        if (visitado[v] == 0 && dados[v].f < min_f) {
+            min_f = dados[v].f;
+            indiceMenor = v;
+        }
+    }
+    return indiceMenor;
+}
+
+// ----------------------------------------------------
+// 4. ALGORITMO A*
+// ----------------------------------------------------
+void aStar(No_AStar* grafo[], int numVertices, int origem, int destino) {
+    NodeData dados[numVertices];
+    int visitado[numVertices]; 
+    
+    // Inicialização
+    for (int i = 0; i < numVertices; i++) {
+        dados[i].id = i;
+        dados[i].g = INF;
+        dados[i].h = calcularHeuristica(i, destino); // Calcula heurística inicial
+        dados[i].f = dados[i].g + dados[i].h;
+        visitado[i] = 0;
+    }
+
+    dados[origem].g = 0;
+    dados[origem].f = dados[origem].g + dados[origem].h;
+
+    for (int count = 0; count < numVertices; count++) {
+        
+        // Pega o vértice U não visitado com o menor custo F (a prioridade)
+        int u = encontrarMenorF(dados, visitado, numVertices);
+
+        if (u == -1 || u == destino) break; // Chegamos ao destino ou inalcançável
+        
+        visitado[u] = 1;
+
+        // Relaxamento dos vizinhos (V)
+        No_AStar* adjacente = grafo[u];
+        while (adjacente != NULL) {
+            int v = adjacente->verticeDestino;
+            int peso_aresta = adjacente->peso;
+
+            // Se V não foi visitado E o novo caminho para V é menor (dados[u].g + peso < dados[v].g)
+            if (visitado[v] == 0 && dados[u].g != INF && dados[u].g + peso_aresta < dados[v].g) {
+                
+                // Atualiza G, F e pai (para rastrear o caminho)
+                dados[v].g = dados[u].g + peso_aresta;
+                dados[v].f = dados[v].g + dados[v].h;
+                // [Opcional: Armazenar o pai para reconstruir o caminho]
+            }
+            adjacente = adjacente->proximo;
+        }
+    }
+
+    // Impressão do resultado
+    printf("\n--- Algoritmo A* (Busca Informada) ---\n");
+    if (dados[destino].g != INF) {
+        printf("Menor Custo do Vertice %d para %d: %d\n", origem, destino, dados[destino].g);
+    } else {
+        printf("Destino %d inalcancavel a partir de %d.\n", destino, origem);
+    }
+    printf("---------------------------------------\n");
+}
+
+
+// [Faltam as funções de criarAresta_AStar e main para este código ser executável, 
+// mas elas são análogas às usadas no Dijkstra.]

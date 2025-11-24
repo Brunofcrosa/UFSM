@@ -1,0 +1,158 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define VERTICES 8 // Número de vértices para o exemplo
+
+// --- ESTRUTURA BÁSICA ---
+typedef struct No {
+    int verticeDestino;     
+    struct No* proximo;     
+} No;
+
+// Variáveis Globais de Controle para o Tarjan
+int tempo;
+int disc[VERTICES];     // Tempo de Descoberta
+int low[VERTICES];      // Low-Link Value
+int naPilha[VERTICES];  // 1 se o nó está na pilha, 0 caso contrário
+int pilha[VERTICES];    // A pilha de nós
+int topo = -1;          // Índice do topo da pilha
+
+// ----------------------------------------------------
+// 1. AUXILIARES DA PILHA
+// ----------------------------------------------------
+void push(int u) {
+    if (topo < VERTICES - 1) {
+        pilha[++topo] = u;
+        naPilha[u] = 1; // Marca que está na pilha
+    }
+}
+
+int pop() {
+    if (topo >= 0) {
+        int u = pilha[topo--];
+        naPilha[u] = 0; // Desmarca que saiu da pilha
+        return u;
+    }
+    return -1;
+}
+
+// ----------------------------------------------------
+// 2. CRIAR ARESTA (DIRECIONADA)
+// ----------------------------------------------------
+void criarAresta(No* grafo[], int u, int v) {
+    No* novo = (No*) malloc(sizeof(No));
+    if (novo == NULL) {
+        fprintf(stderr, "Erro de alocacao de memoria.\n");
+        return;
+    }
+    novo->verticeDestino = v;
+    novo->proximo = grafo[u]; 
+    grafo[u] = novo; 
+}
+
+// ----------------------------------------------------
+// 3. FUNÇÃO DFS PRINCIPAL DO TARJAN
+// ----------------------------------------------------
+void DFS_Tarjan(No* grafo[], int u) {
+    
+    // Inicializa o tempo de descoberta e o low-link
+    disc[u] = low[u] = ++tempo;
+    push(u); // Coloca o nó atual na pilha
+
+    // Itera sobre todos os vizinhos (v) de U
+    No* adjacente = grafo[u];
+    while (adjacente != NULL) {
+        int v = adjacente->verticeDestino;
+
+        // Se V não foi visitado, é uma aresta de árvore
+        if (disc[v] == -1) {
+            DFS_Tarjan(grafo, v);
+            // Ao retornar, atualiza o low de U
+            low[u] = (low[u] < low[v]) ? low[u] : low[v];
+        }
+        // Se V foi visitado E está na pilha, é uma aresta de retorno
+        else if (naPilha[v] == 1) {
+            // Atualiza o low de U com o tempo de descoberta de V
+            low[u] = (low[u] < disc[v]) ? low[u] : disc[v];
+        }
+        
+        adjacente = adjacente->proximo;
+    }
+
+    // Se a raiz do SCC é alcançada (low[u] == disc[u])
+    if (low[u] == disc[u]) {
+        printf("SCC encontrada: { ");
+        int no_pop;
+        do {
+            no_pop = pop();
+            printf("%d ", no_pop);
+        } while (no_pop != u); // Continua desempilhando até o próprio U
+        printf("}\n");
+    }
+}
+
+// ----------------------------------------------------
+// 4. WRAPPER PARA INICIAR O ALGORITMO
+// ----------------------------------------------------
+void encontrarSCCs(No* grafo[], int numVertices) {
+    
+    // Inicializa as variáveis de controle
+    tempo = 0;
+    topo = -1;
+    for (int i = 0; i < numVertices; i++) {
+        disc[i] = -1; // -1 indica não visitado
+        low[i] = -1;
+        naPilha[i] = 0;
+    }
+
+    printf("--- Algoritmo de Tarjan: Componentes Fortemente Conexas ---\n");
+
+    // Inicia o DFS a partir de todos os vértices não visitados
+    for (int i = 0; i < numVertices; i++) {
+        if (disc[i] == -1) {
+            DFS_Tarjan(grafo, i);
+        }
+    }
+}
+
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO)
+// ----------------------------------------------------
+void desalocarGrafo(No* grafo[], int numVertices) {
+    for (int i = 0; i < numVertices; i++) {
+        No* atual = grafo[i];
+        while (atual != NULL) {
+            No* temp = atual;
+            atual = atual->proximo;
+            free(temp); 
+        }
+    }
+}
+
+int main() {
+    // Vértices de 0 a 7
+    No* grafo[VERTICES] = {NULL}; 
+
+    // Exemplo de grafo direcionado com SCCs
+    criarAresta(grafo, 0, 1);
+    criarAresta(grafo, 1, 2);
+    criarAresta(grafo, 2, 0); // Ciclo 0-1-2 (Primeiro SCC)
+    
+    criarAresta(grafo, 2, 3);
+    criarAresta(grafo, 3, 4);
+    criarAresta(grafo, 4, 5);
+    criarAresta(grafo, 5, 3); // Ciclo 3-4-5 (Segundo SCC)
+    
+    criarAresta(grafo, 5, 6);
+    criarAresta(grafo, 6, 7);
+    
+    // Executa o algoritmo
+    encontrarSCCs(grafo, VERTICES);
+
+    // Limpeza
+    desalocarGrafo(grafo, VERTICES);
+
+    return 0;
+}

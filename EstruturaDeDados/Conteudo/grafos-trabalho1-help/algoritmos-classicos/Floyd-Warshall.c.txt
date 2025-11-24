@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <limits.h>
+
+// Define o número MÁXIMO de estações de trem (vértices)
+#define ESTACOES 4 
+#define INF INT_MAX // Usamos INT_MAX para representar uma distância "infinita" (inalcançável)
+
+// -----------------------------------------------------------------
+// 1. FUNÇÃO PRINCIPAL: ALGORITMO DE FLOYD-WARSHALL
+// -----------------------------------------------------------------
+// Recebe a matriz de distâncias iniciais e a atualiza com os menores caminhos.
+void floydWarshall(int distancias[ESTACOES][ESTACOES]) {
+    int i, j, k;
+
+    // Loop principal (o "k" é o vértice intermediário)
+    // k: Estação de trem que serve de 'pivot' ou 'ponte' no caminho
+    for (k = 0; k < ESTACOES; k++) {
+        // i: Estação de partida (origem)
+        for (i = 0; i < ESTACOES; i++) {
+            // j: Estação de chegada (destino)
+            for (j = 0; j < ESTACOES; j++) {
+                
+                // Evita overflow na soma de INF + peso
+                if (distancias[i][k] != INF && distancias[k][j] != INF) {
+                    // RELAXAMENTO:
+                    // Verifica se o caminho atual de i para j (distancias[i][j])
+                    // é maior que o caminho passando por k (distancias[i][k] + distancias[k][j])
+                    if (distancias[i][k] + distancias[k][j] < distancias[i][j]) {
+                        
+                        // Atualiza o menor caminho encontrado
+                        distancias[i][j] = distancias[i][k] + distancias[k][j];
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------
+// 2. FUNÇÃO AUXILIAR: IMPRIMIR MATRIZ DE DISTÂNCIAS
+// ----------------------------------------------------
+void imprimirDistancias(int distancias[ESTACOES][ESTACOES]) {
+    printf("\nMatriz Final de Menores Caminhos (Custo):\n");
+    printf("     0    1    2    3\n");
+    printf("   ------------------\n");
+    
+    for (int i = 0; i < ESTACOES; i++) {
+        printf("%d |", i);
+        for (int j = 0; j < ESTACOES; j++) {
+            if (distancias[i][j] == INF) {
+                printf(" INF"); // Inalcançável
+            } else {
+                printf(" %4d", distancias[i][j]);
+            }
+        }
+        printf("\n");
+    }
+}
+
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO: REDE DE TRENS)
+// ----------------------------------------------------
+int main() {
+    // Grafo representado por Matriz de Adjacência:
+    // Pesos representam o custo (tempo, dinheiro, etc.)
+    // INF: Sem conexão direta
+    // 0: Distância para si mesmo
+    int matriz_custo[ESTACOES][ESTACOES] = {
+        /* Origem 0 */ {0,   5,   INF, 10},
+        /* Origem 1 */ {INF, 0,   3,   INF},
+        /* Origem 2 */ {INF, INF, 0,   1},
+        /* Origem 3 */ {INF, INF, INF, 0}
+    };
+
+    printf("--- Algoritmo Floyd-Warshall: Rede de Trens ---\n");
+    printf("Matriz Inicial de Custos Diretos:\n");
+    imprimirDistancias(matriz_custo);
+
+    // Executa o algoritmo
+    floydWarshall(matriz_custo);
+
+    // Imprime o resultado final
+    imprimirDistancias(matriz_custo);
+    
+    /* RESULTADO ESPERADO APÓS O ALGORITMO:
+    A menor distância de 0 para 3 é 9 (0 -> 1 -> 2 -> 3), não 10 (0 -> 3 direto).
+    */
+
+    return 0;
+}

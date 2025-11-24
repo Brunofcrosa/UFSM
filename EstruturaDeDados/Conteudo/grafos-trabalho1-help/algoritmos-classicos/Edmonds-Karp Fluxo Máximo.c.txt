@@ -1,0 +1,113 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define VERTICES 6 // Fonte (0) e Sumidouro (5)
+#define INF INT_MAX
+
+// ----------------------------------------------------
+// 1. FUNÇÃO BFS: ENCONTRAR CAMINHO AUMENTANTE
+// ----------------------------------------------------
+// Usa BFS para verificar se existe um caminho da Fonte (s) para o Sumidouro (t)
+// no grafo residual e preenche o array 'pai' (predecessor).
+int bfs(int grafoResidual[VERTICES][VERTICES], int s, int t, int pai[]) {
+    int visitado[VERTICES] = {0}; // 0 = Não visitado
+    int fila[VERTICES];
+    int frente = 0, traseira = 0;
+
+    fila[traseira++] = s;
+    visitado[s] = 1;
+    pai[s] = -1;
+
+    while (frente < traseira) {
+        int u = fila[frente++];
+
+        for (int v = 0; v < VERTICES; v++) {
+            // Se V não foi visitado E ainda existe capacidade de U para V
+            if (visitado[v] == 0 && grafoResidual[u][v] > 0) {
+                fila[traseira++] = v;
+                pai[v] = u;
+                visitado[v] = 1;
+                
+                // Se o sumidouro foi alcançado, retornamos sucesso
+                if (v == t) return 1; 
+            }
+        }
+    }
+    return 0; // Nenhum caminho foi encontrado
+}
+
+
+// ----------------------------------------------------
+// 2. ALGORITMO DE EDMONDS-KARP (Max Flow)
+// ----------------------------------------------------
+// Encontra o Fluxo Máximo da Fonte (s) para o Sumidouro (t)
+int edmondsKarp(int grafoCapacidade[VERTICES][VERTICES], int s, int t) {
+    
+    // O grafo residual é inicialmente igual ao grafo de capacidade
+    int grafoResidual[VERTICES][VERTICES];
+    for (int i = 0; i < VERTICES; i++) {
+        for (int j = 0; j < VERTICES; j++) {
+            grafoResidual[i][j] = grafoCapacidade[i][j];
+        }
+    }
+
+    int pai[VERTICES]; // Array para armazenar o caminho encontrado pelo BFS
+    int fluxoMaximo = 0;
+
+    // Loop principal: Continua encontrando caminhos aumentantes
+    while (bfs(grafoResidual, s, t, pai)) {
+        
+        // 1. Encontra o fluxo de gargalo (bottleneck) no caminho atual
+        int fluxoCaminho = INF;
+        for (int v = t; v != s; v = pai[v]) {
+            int u = pai[v];
+            if (grafoResidual[u][v] < fluxoCaminho) {
+                fluxoCaminho = grafoResidual[u][v];
+            }
+        }
+
+        // 2. Atualiza as capacidades do grafo residual
+        for (int v = t; v != s; v = pai[v]) {
+            int u = pai[v];
+            // Reduz a capacidade residual na direção de ida (u -> v)
+            grafoResidual[u][v] -= fluxoCaminho; 
+            // Aumenta a capacidade residual na direção de volta (v -> u)
+            grafoResidual[v][u] += fluxoCaminho; 
+        }
+
+        // 3. Adiciona o fluxo encontrado ao fluxo total
+        fluxoMaximo += fluxoCaminho;
+    }
+
+    return fluxoMaximo;
+}
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO: FLUXO DE REDE)
+// ----------------------------------------------------
+int main() {
+    // Grafo de Capacidade: [i][j] é a capacidade máxima da aresta i -> j
+    // Vértices 0 (Fonte) a 5 (Sumidouro)
+    int rede_capacidade[VERTICES][VERTICES] = {
+        //   0  1  2  3  4  5
+        /*0*/ {0, 16, 13, 0, 0, 0},   // Fonte
+        /*1*/ {0, 0, 10, 12, 0, 0},
+        /*2*/ {0, 4, 0, 0, 14, 0},
+        /*3*/ {0, 0, 9, 0, 0, 20},
+        /*4*/ {0, 0, 0, 7, 0, 4},     // Sumidouro
+        /*5*/ {0, 0, 0, 0, 0, 0}
+    };
+    
+    int fonte = 0;
+    int sumidouro = 5;
+
+    printf("--- Algoritmo de Edmonds-Karp (Max Flow) ---\n");
+    
+    int fluxo = edmondsKarp(rede_capacidade, fonte, sumidouro);
+
+    printf("O Fluxo Maximo da Fonte (%d) para o Sumidouro (%d) e: %d\n", fonte, sumidouro, fluxo);
+    // Resultado esperado: 23
+
+    return 0;
+}

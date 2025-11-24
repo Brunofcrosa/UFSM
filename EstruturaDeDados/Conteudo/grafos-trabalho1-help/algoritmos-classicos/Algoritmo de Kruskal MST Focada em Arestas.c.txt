@@ -1,0 +1,118 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define VERTICES 5 // Número de nós
+#define MAX_ARESTAS 10 // Número máximo de arestas para o exemplo
+
+// --- 1. ESTRUTURA PARA ARESTA (KRUSKAL OPERA SOBRE ISTO) ---
+typedef struct Aresta {
+    int origem;
+    int destino;
+    int peso;
+} Aresta;
+
+// Array para armazenar o conjunto de DSU/Union-Find.
+// parent[i] armazena o pai do elemento i.
+int parent[VERTICES]; 
+
+// ----------------------------------------------------
+// 2. FUNÇÕES UNION-FIND (DSU)
+// ----------------------------------------------------
+
+// Inicializa a estrutura DSU: cada nó é seu próprio pai.
+void makeSet() {
+    for (int i = 0; i < VERTICES; i++) {
+        parent[i] = i;
+    }
+}
+
+// Encontra o representante (raiz) do conjunto de um elemento i (com compressão de caminho).
+int find(int i) {
+    if (parent[i] == i)
+        return i;
+    // Compressão de caminho para otimização
+    return parent[i] = find(parent[i]); 
+}
+
+// Une dois conjuntos (o conjunto que contém a e o conjunto que contém b).
+// Retorna 1 se a união foi realizada (sem ciclo), 0 se já estavam no mesmo conjunto (ciclo).
+int unionSets(int a, int b) {
+    int root_a = find(a);
+    int root_b = find(b);
+
+    if (root_a != root_b) {
+        // Une os conjuntos
+        parent[root_b] = root_a;
+        return 1; // Sucesso: Aresta adicionada
+    }
+    return 0; // Falha: Forma um ciclo
+}
+
+// ----------------------------------------------------
+// 3. AUXILIAR: COMPARAÇÃO PARA QSORT (Ordenação)
+// ----------------------------------------------------
+// Função de comparação para qsort: ordena por peso crescente.
+int compararArestas(const void* a, const void* b) {
+    Aresta* arestaA = (Aresta*)a;
+    Aresta* arestaB = (Aresta*)b;
+    return arestaA->peso - arestaB->peso;
+}
+
+// ----------------------------------------------------
+// 4. ALGORITMO DE KRUSKAL
+// ----------------------------------------------------
+void algoritmoKruskal(Aresta arestas[], int numArestas) {
+    
+    // 1. ORDENAR as arestas pelo peso (custo)
+    qsort(arestas, numArestas, sizeof(Aresta), compararArestas);
+    
+    // 2. Inicializar a estrutura Union-Find
+    makeSet();
+    
+    Aresta mst[VERTICES - 1]; // A MST terá V-1 arestas
+    int indiceMST = 0;
+    int custoTotal = 0;
+    
+    printf("\n--- Algoritmo de Kruskal (MST) ---\n");
+
+    // 3. Iterar sobre as arestas ordenadas
+    for (int i = 0; i < numArestas && indiceMST < VERTICES - 1; i++) {
+        
+        int u = arestas[i].origem;
+        int v = arestas[i].destino;
+        
+        // Verifica se a aresta (u, v) conecta dois conjuntos diferentes
+        if (find(u) != find(v)) {
+            
+            // Adiciona a aresta à MST (não forma ciclo)
+            unionSets(u, v);
+            mst[indiceMST++] = arestas[i];
+            custoTotal += arestas[i].peso;
+            
+            printf("Adicionada: %d -- %d (Custo: %d)\n", u, v, arestas[i].peso);
+        }
+        // Se find(u) == find(v), a aresta forma um ciclo e é ignorada.
+    }
+
+    printf("----------------------------------\n");
+    printf("Custo Total da MST: %d\n", custoTotal);
+}
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO)
+// ----------------------------------------------------
+int main() {
+    
+    // Vértices de 0 a 4
+    // Arestas: (Origem, Destino, Peso)
+    Aresta arestas_exemplo[MAX_ARESTAS] = {
+        {0, 1, 2}, {1, 2, 3}, {0, 3, 6},
+        {1, 3, 8}, {1, 4, 5}, {2, 4, 7}, 
+        {3, 4, 9}, {0, 4, 10} // Arestas adicionais (serão ignoradas)
+    };
+    int numArestas = 8;
+    
+    algoritmoKruskal(arestas_exemplo, numArestas);
+
+    return 0;
+}

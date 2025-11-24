@@ -1,0 +1,136 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <limits.h>
+
+#define VERTICES 5
+#define MAX_ARESTAS 7 // Número de arestas no exemplo
+#define TENTATIVAS 100 // Número de vezes que o algoritmo será executado (para alta probabilidade)
+
+// --- 1. ESTRUTURA PARA ARESTA ---
+typedef struct Aresta {
+    int origem;
+    int destino;
+} Aresta;
+
+// Estrutura para o grafo
+typedef struct Grafo {
+    int V; // Vértices
+    int E; // Arestas
+    Aresta* aresta;
+} Grafo;
+
+// ----------------------------------------------------
+// 2. FUNÇÕES UNION-FIND (DSU) para Contração
+// ----------------------------------------------------
+int find(int parent[], int i) {
+    if (parent[i] == i)
+        return i;
+    return parent[i] = find(parent, parent[i]);
+}
+
+void unionSets(int parent[], int a, int b) {
+    int root_a = find(parent, a);
+    int root_b = find(parent, b);
+    parent[root_b] = root_a;
+}
+
+// ----------------------------------------------------
+// 3. ALGORITMO DE KARGER (CONTRAÇÃO)
+// ----------------------------------------------------
+// Realiza o processo de contração até restarem apenas 2 vértices
+int kargerContracao(Grafo* grafo) {
+    int V = grafo->V;
+    int E = grafo->E;
+    Aresta* arestas = grafo->aresta;
+    
+    // parent[] rastreia qual super-vértice cada nó pertence
+    int parent[V];
+    for (int i = 0; i < V; i++)
+        parent[i] = i;
+
+    int vertices_restantes = V;
+    
+    // Loop de contração: continua até restarem apenas 2 super-vértices
+    while (vertices_restantes > 2) {
+        
+        // 1. Escolhe uma aresta aleatória
+        int i = rand() % E;
+        
+        // Encontra os super-vértices de u e v
+        int root1 = find(parent, arestas[i].origem);
+        int root2 = find(parent, arestas[i].destino);
+
+        // Se a aresta conecta dois super-vértices diferentes, contrai
+        if (root1 != root2) {
+            unionSets(parent, root1, root2);
+            vertices_restantes--; // Um super-vértice foi criado
+        }
+    }
+
+    // 2. Conta as arestas entre os dois super-vértices finais
+    int count_corte = 0;
+    for (int i = 0; i < E; i++) {
+        int root1 = find(parent, arestas[i].origem);
+        int root2 = find(parent, arestas[i].destino);
+        
+        // Se as raízes são diferentes, esta aresta é uma aresta de corte
+        if (root1 != root2) {
+            count_corte++;
+        }
+    }
+    
+    return count_corte;
+}
+
+// ----------------------------------------------------
+// 4. WRAPPER PARA EXECUTAR MÚLTIPLAS VEZES
+// ----------------------------------------------------
+int karger(Grafo* grafo) {
+    int min_corte = INT_MAX;
+
+    // Garante que o gerador aleatório seja inicializado uma vez
+    srand(time(0)); 
+    
+    // Executa o processo de contração várias vezes para aumentar a probabilidade de sucesso
+    for (int i = 0; i < TENTATIVAS; i++) {
+        int corte_atual = kargerContracao(grafo);
+        min_corte = MIN(min_corte, corte_atual);
+    }
+    
+    return min_corte;
+}
+
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO)
+// ----------------------------------------------------
+int main() {
+    
+    // Grafo de exemplo (Vértices 0 a 4)
+    Grafo* grafo = (Grafo*) malloc(sizeof(Grafo));
+    grafo->V = VERTICES;
+    grafo->E = MAX_ARESTAS;
+    grafo->aresta = (Aresta*) malloc(sizeof(Aresta) * MAX_ARESTAS);
+
+    // Definindo as arestas (Ex: min-cut é 2 entre {0,1,2} e {3,4})
+    grafo->aresta[0] = (Aresta){0, 1};
+    grafo->aresta[1] = (Aresta){0, 2};
+    grafo->aresta[2] = (Aresta){1, 2};
+    
+    grafo->aresta[3] = (Aresta){2, 3}; // Aresta de corte 1
+    grafo->aresta[4] = (Aresta){2, 4}; // Aresta de corte 2
+    
+    grafo->aresta[5] = (Aresta){3, 4};
+    grafo->aresta[6] = (Aresta){3, 1}; // Aresta extra
+
+    printf("--- Algoritmo de Karger (Corte Minimo Probabilistico) ---\n");
+    int min_corte = karger(grafo);
+    
+    printf("O Corte Minimo (encontrado apos %d tentativas) e: %d\n", TENTATIVAS, min_corte);
+    printf("----------------------------------------------------------\n");
+
+    free(grafo->aresta);
+    free(grafo);
+    return 0;
+}

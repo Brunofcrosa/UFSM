@@ -1,0 +1,118 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define VERTICES 5
+#define INF INT_MAX
+
+// ----------------------------------------------------
+// 1. FUNÇÃO AUXILIAR: ENCONTRAR O PRÓXIMO VÉRTICE (CUSTO MÍNIMO)
+// ----------------------------------------------------
+// Encontra o vértice não incluído na MST que tem o menor valor de custo (chave).
+int encontrarMenorCusto(int chave[], int mstSet[], int numVertices) {
+    int min = INF;
+    int indiceMin = -1;
+
+    for (int v = 0; v < numVertices; v++) {
+        // Se V ainda não está na MST (mstSet[v] == 0) E tem o menor custo (chave)
+        if (mstSet[v] == 0 && chave[v] < min) {
+            min = chave[v];
+            indiceMin = v;
+        }
+    }
+    return indiceMin;
+}
+
+// ----------------------------------------------------
+// 2. FUNÇÃO AUXILIAR: IMPRIMIR MST
+// ----------------------------------------------------
+void imprimirMST(int pai[], int custoGrafo[VERTICES][VERTICES], int numVertices) {
+    int custoTotal = 0;
+    printf("\n--- Arestas da Arvore Geradora Minima (Prim) ---\n");
+    printf("Aresta \t\tCusto\n");
+    
+    // Começa do vértice 1 (o vértice 0 é a raiz)
+    for (int i = 1; i < numVertices; i++) {
+        printf("%d -- %d \t%d \n", pai[i], i, custoGrafo[i][pai[i]]);
+        custoTotal += custoGrafo[i][pai[i]];
+    }
+    printf("Custo Total da MST: %d\n", custoTotal);
+}
+
+
+// ----------------------------------------------------
+// 3. ALGORITMO DE PRIM
+// ----------------------------------------------------
+// O grafo é representado por uma matriz de adjacência ponderada.
+void algoritmoPrim(int custoGrafo[VERTICES][VERTICES], int numVertices) {
+    // Array para guardar o pai de cada vértice na MST (usado para reconstruir a árvore)
+    int pai[numVertices]; 
+    
+    // Array para guardar o custo da aresta mais barata que conecta V à MST
+    int chave[numVertices]; 
+    
+    // Array booleano (0/1) para rastrear se o vértice já está na MST
+    int mstSet[numVertices]; 
+
+    // Inicialização
+    for (int i = 0; i < numVertices; i++) {
+        chave[i] = INF; // Custos iniciais infinitos
+        mstSet[i] = 0;  // Ninguém está na MST
+        pai[i] = -1;    // Nenhum pai
+    }
+
+    // O vértice inicial (raiz da MST) tem custo zero
+    chave[0] = 0;
+    pai[0] = -1; // O nó 0 é a raiz, não tem pai
+
+    // A MST terá (numVertices - 1) arestas
+    for (int count = 0; count < numVertices - 1; count++) {
+        
+        // Seleciona o vértice U com o custo chave mínimo (simula a Fila de Prioridade)
+        int u = encontrarMenorCusto(chave, mstSet, numVertices);
+
+        if (u == -1) break; // Inalcançável
+        
+        // Adiciona U ao conjunto da MST
+        mstSet[u] = 1;
+
+        // Atualiza os valores chave e pai dos vértices adjacentes a U
+        for (int v = 0; v < numVertices; v++) {
+            
+            // Verifica três condições:
+            // 1. Há aresta de U para V (custoGrafo[u][v] != 0 e != INF)
+            // 2. V ainda não está na MST (mstSet[v] == 0)
+            // 3. O peso da aresta (U, V) é menor que o custo atual de V (chave[v])
+            if (custoGrafo[u][v] != 0 && mstSet[v] == 0 && custoGrafo[u][v] < chave[v]) {
+                pai[v] = u;
+                chave[v] = custoGrafo[u][v];
+            }
+        }
+    }
+
+    // Imprime o resultado final
+    imprimirMST(pai, custoGrafo, numVertices);
+}
+
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO)
+// ----------------------------------------------------
+int main() {
+    // Matriz de Adjacência Ponderada (Simétrica para grafo não-direcionado)
+    // 0: Aresta para si mesmo (não usada)
+    // INF: Sem conexão
+    int grafo[VERTICES][VERTICES] = {
+        //  0    1    2    3    4
+        /*0*/ {0,   2,  INF, 6,  INF},
+        /*1*/ {2,   0,  3,   8,  5},
+        /*2*/ {INF, 3,  0,   INF, 7},
+        /*3*/ {6,   8,  INF, 0,  9},
+        /*4*/ {INF, 5,  7,   9,  0}
+    };
+
+    printf("--- Algoritmo de Prim (MST) ---\n");
+    algoritmoPrim(grafo, VERTICES);
+
+    return 0;
+}

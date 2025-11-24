@@ -1,0 +1,135 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define U_SET 4 // Número de vértices no conjunto U (esquerda)
+#define V_SET 4 // Número de vértices no conjunto V (direita)
+#define VERTICES U_SET + V_SET
+
+// --- 1. ESTRUTURA BÁSICA ---
+// Usaremos a Lista de Adjacência para o conjunto U, apontando para V.
+typedef struct No {
+    int verticeDestino;     
+    struct No* proximo;     
+} No;
+
+// Variáveis Globais de Controle
+int match_to[V_SET]; // match_to[v] = u significa que V está emparelhado com U
+int visitado[U_SET]; // Array de controle para o DFS
+
+// ----------------------------------------------------
+// 2. CRIAR ARESTA (Arestas de U para V)
+// ----------------------------------------------------
+void criarAresta(No* grafo[], int u, int v) {
+    // Note: v deve ser mapeado para o índice 0 a V_SET-1
+    No* novo = (No*) malloc(sizeof(No));
+    if (novo == NULL) {
+        fprintf(stderr, "Erro de alocacao de memoria.\n");
+        return;
+    }
+    novo->verticeDestino = v; 
+    novo->proximo = grafo[u]; 
+    grafo[u] = novo; 
+}
+
+
+// ----------------------------------------------------
+// 3. FUNÇÃO DFS: ENCONTRAR CAMINHO AUMENTANTE
+// ----------------------------------------------------
+// Tenta encontrar um caminho aumentante (augmenting path) a partir do nó U.
+// Retorna 1 se um caminho foi encontrado, 0 caso contrário.
+int dfs_matching(No* grafo[], int u) {
+    
+    // Itera sobre todos os vizinhos (v) do nó U
+    No* adjacente = grafo[u];
+    while (adjacente != NULL) {
+        int v = adjacente->verticeDestino; // Vértice no conjunto V
+        
+        // Se V não foi visitado no ciclo atual do DFS
+        if (visitado[v] == 0) {
+            visitado[v] = 1;
+
+            // Se V não está emparelhado (match_to[v] == -1) 
+            // OU se o par atual de V pode ser movido (encontra um novo caminho para o par)
+            if (match_to[v] < 0 || dfs_matching(grafo, match_to[v])) {
+                // Realiza o emparelhamento: U emparelha com V
+                match_to[v] = u;
+                return 1; // Sucesso: Encontrado um caminho aumentante
+            }
+        }
+        adjacente = adjacente->proximo;
+    }
+    return 0; // Falha: Não foi possível aumentar o matching a partir de U
+}
+
+
+// ----------------------------------------------------
+// 4. ALGORITMO PRINCIPAL (Baseado em Ford-Fulkerson/DFS)
+// ----------------------------------------------------
+void encontrarEmparelhamentoMaximo(No* grafo[]) {
+    
+    // Inicializa o emparelhamento: -1 indica que V não está emparelhado
+    for (int i = 0; i < V_SET; i++) {
+        match_to[i] = -1; 
+    }
+    
+    int tamanhoMatching = 0;
+    
+    // Tenta encontrar um caminho aumentante para cada nó no conjunto U
+    for (int u = 0; u < U_SET; u++) {
+        
+        // Reinicializa o array de visitados para cada iteração do DFS
+        for (int i = 0; i < V_SET; i++) {
+            visitado[i] = 0; 
+        }
+
+        if (dfs_matching(grafo, u)) {
+            tamanhoMatching++;
+        }
+    }
+    
+    // 5. Impressão dos Resultados
+    printf("\n--- Emparelhamento Bipartido Maximo ---\n");
+    printf("Tamanho do Emparelhamento Maximo: %d\n", tamanhoMatching);
+    
+    printf("Emparelhamentos (U -> V):\n");
+    for (int v = 0; v < V_SET; v++) {
+        if (match_to[v] != -1) {
+            printf("  U[%d] -> V[%d]\n", match_to[v], v);
+        }
+    }
+    printf("---------------------------------------\n");
+}
+
+
+// ----------------------------------------------------
+// MAIN (EXEMPLO DE USO)
+// ----------------------------------------------------
+void desalocarGrafo(No* grafo[], int numVertices) {
+    for (int i = 0; i < numVertices; i++) {
+        No* atual = grafo[i];
+        while (atual != NULL) {
+            No* temp = atual;
+            atual = atual->proximo;
+            free(temp); 
+        }
+    }
+}
+
+int main() {
+    // Grafo Bipartido: U = {0, 1, 2, 3}, V = {0, 1, 2, 3}
+    No* grafo_bipartido[U_SET] = {NULL}; 
+
+    // Arestas: (U, V)
+    criarAresta(grafo_bipartido, 0, 1); // 0 -> 1
+    criarAresta(grafo_bipartido, 0, 2); // 0 -> 2
+    criarAresta(grafo_bipartido, 1, 0); // 1 -> 0
+    criarAresta(grafo_bipartido, 2, 3); // 2 -> 3
+    criarAresta(grafo_bipartido, 3, 2); // 3 -> 2
+
+    encontrarEmparelhamentoMaximo(grafo_bipartido);
+
+    // Limpeza
+    desalocarGrafo(grafo_bipartido, U_SET);
+
+    return 0;
+}

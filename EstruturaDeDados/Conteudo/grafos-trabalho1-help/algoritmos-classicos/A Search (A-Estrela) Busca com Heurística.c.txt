@@ -21,16 +21,11 @@ typedef struct NodeData {
 } NodeData;
 
 // --- 2. FUNÇÃO HEURÍSTICA (h(n)) ---
-// Esta é uma função de exemplo. Na prática, seria a distância Euclideana/Manhattan.
-// Aqui, apenas usamos uma estimativa simples baseada no ID do nó.
 int calcularHeuristica(int vertice, int destino) {
     // Exemplo de Heuristica simples:
     return abs(destino - vertice) * 2; 
 }
-
-// ----------------------------------------------------
 // 3. AUXILIAR: ENCONTRAR O PRÓXIMO VÉRTICE (SIMULAÇÃO DA FILA DE PRIORIDADE)
-// ----------------------------------------------------
 // Encontra o vértice não visitado com o menor custo F (g + h).
 int encontrarMenorF(NodeData dados[], int visitado[], int numVertices) {
     int min_f = INF;
@@ -46,9 +41,7 @@ int encontrarMenorF(NodeData dados[], int visitado[], int numVertices) {
     return indiceMenor;
 }
 
-// ----------------------------------------------------
 // 4. ALGORITMO A*
-// ----------------------------------------------------
 void aStar(No_AStar* grafo[], int numVertices, int origem, int destino) {
     NodeData dados[numVertices];
     int visitado[numVertices]; 
@@ -67,10 +60,9 @@ void aStar(No_AStar* grafo[], int numVertices, int origem, int destino) {
 
     for (int count = 0; count < numVertices; count++) {
         
-        // Pega o vértice U não visitado com o menor custo F (a prioridade)
         int u = encontrarMenorF(dados, visitado, numVertices);
 
-        if (u == -1 || u == destino) break; // Chegamos ao destino ou inalcançável
+        if (u == -1 || u == destino) break; 
         
         visitado[u] = 1;
 

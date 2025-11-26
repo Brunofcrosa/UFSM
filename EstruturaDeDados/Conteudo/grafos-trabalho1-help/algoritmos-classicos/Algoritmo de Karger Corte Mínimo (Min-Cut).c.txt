@@ -4,8 +4,8 @@
 #include <limits.h>
 
 #define VERTICES 5
-#define MAX_ARESTAS 7 // Número de arestas no exemplo
-#define TENTATIVAS 100 // Número de vezes que o algoritmo será executado (para alta probabilidade)
+#define MAX_ARESTAS 7 
+#define TENTATIVAS 100 
 
 // --- 1. ESTRUTURA PARA ARESTA ---
 typedef struct Aresta {
@@ -20,9 +20,7 @@ typedef struct Grafo {
     Aresta* aresta;
 } Grafo;
 
-// ----------------------------------------------------
 // 2. FUNÇÕES UNION-FIND (DSU) para Contração
-// ----------------------------------------------------
 int find(int parent[], int i) {
     if (parent[i] == i)
         return i;
@@ -35,10 +33,7 @@ void unionSets(int parent[], int a, int b) {
     parent[root_b] = root_a;
 }
 
-// ----------------------------------------------------
 // 3. ALGORITMO DE KARGER (CONTRAÇÃO)
-// ----------------------------------------------------
-// Realiza o processo de contração até restarem apenas 2 vértices
 int kargerContracao(Grafo* grafo) {
     int V = grafo->V;
     int E = grafo->E;
